@@ -4,5 +4,5 @@ variable "repo_name" {
 
 variable "visibility" {
   type = string
-  default = "internal"
+  default = "private"
 }
