@@ -1,0 +1,97 @@
+name: Test Terraform bug
+on:
+  workflow_dispatch:
+
+jobs:
+  plan-landing-zone-types:
+    name: Validate TerraForm code
+    runs-on: 
+      ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create PEM file for GitHub app
+        env:
+          LSF_PRIVATE_KEY: ${{ secrets.LSF_PEM_FILE_CONTENTS }}
+        shell: pwsh
+        run: |
+          "$($ENV:LSF_PRIVATE_KEY)" | Out-File -FilePath ./lsf_pk.pem -ErrorAction Stop
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+    
+      - name: Terraform Init
+        run: |
+          terraform init
+    
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform \
+          plan \
+          -out=tfplan \
+          -input=false \
+          -var="application_id=${{ vars.LSF_APP_ID }}" \
+          -var="application_installation_id=${{ vars.LSF_APP_INSTALLATION_ID }}"
+
+      - name: Create Module Artifact
+        run: |
+          $stagingDirectory = "staging"
+          $rootModuleFolder = "./"
+          New-Item -Path . -Name $stagingDirectory -ItemType "directory"
+          Copy-Item -Path "${{ env.TF_ROOT }}/*" -Exclude @(".git", ".terraform", ".github",  $stagingDirectory) -Recurse -Destination "./$stagingDirectory"
+
+          $rootModuleFolderTerraformFolder = Join-Path -Path "./$stagingDirectory" -ChildPath $rootModuleFolder -AdditionalChildPath ".terraform"
+          if(Test-Path -Path $rootModuleFolderTerraformFolder) {
+            Remove-Item -Path $rootModuleFolderTerraformFolder -Recurse -Force
+          }
+
+        shell: pwsh
+
+      - name: Publish Module Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: module
+          path: ./staging/
+
+      - name: Show the Plan for Review
+        run: |
+          terraform \
+          show \
+          tfplan
+
+  apply-landing-zone-types:
+    name: Apply TerraForm code
+    needs: plan-landing-zone-types
+    runs-on: 
+      ubuntu-latest
+    steps:
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: module
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          terraform init
+
+      - name: Terraform apply
+        env:
+          TF_LOG: trace
+        run: |
+          terraform version
+          terraform \
+          apply \
+          -input=false \
+          -var="application_id=${{ vars.LSF_APP_ID }}" \
+          -var="application_installation_id=${{ vars.LSF_APP_INSTALLATION_ID }}" \
+          -auto-approve \
+          tfplan
