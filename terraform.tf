@@ -13,11 +13,12 @@ terraform {
 }
 
 provider "github" {
-  owner = var.application_owner
-  app_auth {
+  //owner = var.application_owner
+  token = var.token
+  /*app_auth {
     id = var.application_id
     installation_id = var.application_installation_id
     pem_file = file("./lsf_pk.pem")
-  }
+  }*/
 }
 

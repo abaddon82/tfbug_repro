@@ -11,7 +11,7 @@ output "id" {
 }
 
 resource "github_repository" "lzt_name" {
-  name = var.repo_name
-  is_template = true
-  visibility = var.visibility
+  name = "nyttrepo"
+  //is_template = true
+  visibility = "public"
 }

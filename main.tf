@@ -2,7 +2,7 @@
 module "landing_zone_type_repositories" {
   source    = "./github_repo"
   for_each  = { for lzt in local.repolist : "lzt-${lzt.repo_name}" => lzt }
-  repo_name = "lzt-${each.value.repo_name}"
+  repo_name = "${each.value.repo_name}"
 }
 
 output "landing_zone_types" {

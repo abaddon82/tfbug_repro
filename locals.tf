@@ -1,7 +1,7 @@
 locals {
   repolist = [
     {
-        repo_name = "test-1"
+        repo_name = "test"
         visibility = "private"
     }
   ]
