@@ -35,7 +35,8 @@ jobs:
           -out=tfplan \
           -input=false \
           -var="application_id=${{ vars.LSF_APP_ID }}" \
-          -var="application_installation_id=${{ vars.LSF_APP_INSTALLATION_ID }}"
+          -var="application_installation_id=${{ vars.LSF_APP_INSTALLATION_ID }}" \
+          -var="token=${{ secrets.PAT }}"
 
       - name: Create Module Artifact
         run: |
@@ -93,5 +94,6 @@ jobs:
           -input=false \
           -var="application_id=${{ vars.LSF_APP_ID }}" \
           -var="application_installation_id=${{ vars.LSF_APP_INSTALLATION_ID }}" \
+          -var="token=${{ secrets.PAT }}" \
           -auto-approve \
           tfplan
